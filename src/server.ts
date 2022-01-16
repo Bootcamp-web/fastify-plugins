@@ -1,4 +1,5 @@
 import fastify from "fastify";
+import { main_app } from "./app";
 import { PORT } from "./config";
 import { getBrowser, getOS } from "./midlewares/enviroment.middleware";
 const server = fastify({
@@ -6,12 +7,7 @@ const server = fastify({
     disableRequestLogging: true
 });
 
+server.register(main_app)
 
-
-server.get("/",async(request,reply)=>{
-    return {browser:getBrowser(request), os:getOS(request)}
-
-
-})
 
 server.listen(PORT)

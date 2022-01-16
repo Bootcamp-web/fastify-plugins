@@ -1,6 +1,6 @@
 import { FastifyRequest } from "fastify";
 import { FastifyPluginAsync } from "fastify";
-//import fp from 'fastify-plugin'
+import fp from 'fastify-plugin'
 
 
 
@@ -53,3 +53,23 @@ export const getOS = (request: FastifyRequest): OS => {
     }
     return os
 }
+
+declare module "fastify" {
+    interface FastifyRequest {
+        browser: BROWSER,
+        os: OS
+    }
+}
+
+export const middlewareEnviroment: FastifyPluginAsync = fp(async (app) => {
+    app.log.info("Instalando plugin con hook custom");
+    app.addHook("onRequest", async (req, res) => {
+        req.log.info("detecting browser...");
+        req.log.info("detecting OS...");
+        req.browser = getBrowser(req);
+        req.os = getOS(req);
+    })
+    // app.get("/core", async (request, reply) => {
+    //     return { success: request.browser }
+    // })
+})
