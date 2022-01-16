@@ -1,11 +1,12 @@
 # fastify-plugins
-1. [Arrancar yarn ](#schema1)
+1. [Arrancar npm](#schema1)
 1. [Añadir typescript y ts-node-dev ](#schema2)
 1. [Añadir el script para que compile Typescript y ejecutarlo ](#schema3)
 1. [Configurar eslint ](#schema4)
 1. [Añadir nuestras reglas a eslint ](#schema5)
 1. [Variables de entorno ](#schema6)
-1. [Arrancar yarn ](#schema1)
+1. [7 Comprobando las variables de entorno](#schema7)
+1. [Creando un ENUM para ver los exploradores y creamos el archivo `enviroment.middleware.ts`](#schema8)
 
 
 
@@ -14,9 +15,9 @@
 
 <a name="schema1"></a>
 
-# 1 Arrancar yarn
+# 1 Arrancar npm
 ~~~bash
-yarn init -y
+npm init -y
 ~~~
 <hr>
 
@@ -24,7 +25,7 @@ yarn init -y
 
 # 2 Añadir paquetes necesarios
 ~~~
-yarn add typescript ts-node-dev eslint  fastify
+npm install typescript ts-node-dev eslint  fastify
 ~~~
 
 <hr>
@@ -38,7 +39,7 @@ yarn add typescript ts-node-dev eslint  fastify
   },
 ~~~
 ~~~bash
-yarn build tsc --init
+npm build tsc --init
 ~~~
 
 
@@ -48,14 +49,9 @@ yarn build tsc --init
 
 # 4 Configurar eslint
 ~~~bash
-yarn run eslint --init
+npm run eslint --init
 ~~~
 
-Después de esto hay que borrar la carpeta node-modules
-y volver a instalar yarn
-~~~bash
-yarn install
-~~~
 
 <hr>
 
@@ -79,7 +75,7 @@ yarn install
 # 6 Variables de entorno
 Instalar  dotenv, que nos permite controlar las variables de entrono
 ~~~
-yarn add dotenv
+npm install add dotenv
 ~~~
 Creamos el  archivo `.env` y lo metemos en el   `.gitignore` porque esa variables de entorno pueden contener datos privados y que no deben conocer nadie.
 Para trabajar con las variables de entrono nos creamos un archivo `config.ts`
@@ -130,4 +126,103 @@ const checkEnv = (envVar: string)=>{
 }
  
 export const PORT:number = parseInt(checkEnv("PORT"),10)
+~~~
+<hr>
+
+<a name="schema8"></a>
+
+# 8 Creando un ENUM para ver los exploradores y creamos el archivo `enviroment.middleware.ts`
+- Modificamos el `server.ts`
+~~~ts
+export enum BROWSER {
+    CHROME = "Chrome",
+    SAFARI = "Safari",
+    FIREFOX = "Firefox",
+    POSTMAN = "Postman",
+    UNKNOWN = "Unknown"
+}
+export const getBrowser = (request:any):BROWSER=>{
+    const userAgent = request.headers["user-agent"]
+    console.log(userAgent)
+    let browser: BROWSER = BROWSER.UNKNOWN
+    if (userAgent) {
+        if (userAgent.includes("Chrome")) {
+            browser = BROWSER.CHROME;
+        } else if (userAgent.includes("Safari")) {
+            browser = BROWSER.SAFARI;
+        } else if (userAgent.includes("Firefox")) {
+            browser = BROWSER.FIREFOX
+        } else if (userAgent.includes("Postman")) {
+            browser = BROWSER.POSTMAN
+        } else {
+            browser = BROWSER.UNKNOWN
+        }
+    }
+    return browser
+}
+
+
+server.get("/",async(request,reply)=>{
+    return {browser:getBrowser(request)}
+
+
+})
+~~~
+- Refactorizamos y creamos el archivo `enviroment.middleware.ts`
+~~~ts
+import { FastifyRequest } from "fastify";
+import { FastifyPluginAsync } from "fastify";
+//import fp from 'fastify-plugin'
+
+
+
+export enum OS {
+    WINDOWS = "Windows",
+    MAC = "Mac",
+    UBUNTU = "Ubuntu",
+    UNKNOWN = "Unknown",
+}
+
+export enum BROWSER {
+    CHROME = "Chrome",
+    SAFARI = "Safari",
+    FIREFOX = "Firefox",
+    POSTMAN = "Postman",
+    UNKNOWN = "Unknown"
+}
+
+export const getBrowser = (request: FastifyRequest): BROWSER => {
+    let browser: BROWSER = BROWSER.UNKNOWN;
+    const userAgent = request.headers["user-agent"];
+    if (userAgent) {
+        if (userAgent.includes("Chrome")) {
+            browser = BROWSER.CHROME;
+        } else if (userAgent.includes("Safari")) {
+            browser = BROWSER.SAFARI;
+        } else if (userAgent.includes("Firefox")) {
+            browser = BROWSER.FIREFOX
+        } else if (userAgent.includes("Postman")) {
+            browser = BROWSER.POSTMAN
+        } else {
+            browser = BROWSER.UNKNOWN
+        }
+    }
+    return browser
+}
+
+
+export const getOS = (request: FastifyRequest): OS => {
+    let os: OS = OS.UNKNOWN;
+    const userAgent = request.headers["user-agent"];
+    if (userAgent) {
+        if (userAgent.includes("Mac")) {
+            os = OS.MAC;
+        } else if (userAgent.includes("Windows")) {
+            os = OS.WINDOWS;
+        } else if (userAgent.includes("Ubuntu")) {
+            os = OS.UBUNTU
+        }
+    }
+    return os
+}
 ~~~
